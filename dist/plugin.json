@@ -1,0 +1,19 @@
+{
+  "type": "panel",
+  "name": "Singlestat EC",
+  "id": "singlestat_ec",
+
+  "info": {
+    "description": "Singlestat EC Panel for Grafana",
+    "author": {
+      "name": "Grafana Project + EC",
+      "url": "https://grafana.com"
+},
+    "logos": {
+      "small": "img/icn-singlestat-panel.svg",
+      "large": "img/icn-singlestat-panel.svg"
+    },
+    "version": "5.0.0"
+  }
+}
+

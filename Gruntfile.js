@@ -23,9 +23,9 @@ module.exports = function(grunt) {
       dist_html: {
         expand: true,
         flatten: true,
-        cwd: 'src/partials',
+        cwd: 'src',
         src: ['*.html'],
-        dest: 'dist/partials/'
+        dest: 'dist'
       },
       dist_css: {
         expand: true,
@@ -44,7 +44,7 @@ module.exports = function(grunt) {
       dist_statics: {
         expand: true,
         flatten: true,
-        src: ['src/plugin.json', 'LICENSE', 'README.md'],
+        src: ['plugin.json', 'LICENSE', 'README.md'],
         dest: 'dist/'
       }
     },
