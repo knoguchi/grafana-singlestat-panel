@@ -45,6 +45,7 @@ class SingleStatCtrl extends MetricsPanelCtrl {
     format: 'none',
     prefix: '',
     postfix: '',
+    seriesIndex: 'A',
     nullText: null,
     valueMaps: [{ value: 'null', op: '=', text: 'N/A' }],
     mappingTypes: [{ name: 'value to text', value: 1 }, { name: 'range to text', value: 2 }],
@@ -64,6 +65,7 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       full: false,
       lineColor: 'rgb(31, 120, 193)',
       fillColor: 'rgba(31, 118, 189, 0.18)',
+      seriesIndex: 'A'
     },
     gauge: {
       show: false,
@@ -279,21 +281,38 @@ class SingleStatCtrl extends MetricsPanelCtrl {
 
   setValues(data) {
     data.flotpairs = [];
-
-    if (this.series.length > 1) {
+    var bigValueIndex = 0;
+    var sparklineIndex = bigValueIndex;
+    var CHAR_CODE_A = 65;
+    if (this.panel.seriesIndex) {
+       bigValueIndex = this.panel.seriesIndex.charCodeAt() - CHAR_CODE_A;
+       sparklineIndex = bigValueIndex;
+       if (this.panel.sparkline.seriesIndex) {
+         sparklineIndex = this.panel.sparkline.seriesIndex.charCodeAt() - CHAR_CODE_A;
+       }
+    }
+    if (this.series.length > 1 && bigValueIndex === 0 && sparklineIndex === 0) {
       var error: any = new Error();
       error.message = 'Multiple Series Error';
       error.data =
         'Metric query returns ' +
         this.series.length +
-        ' series. Single Stat Panel expects a single series.\n\nResponse:\n' +
-        JSON.stringify(this.series);
+            ' series. Single Stat Panel expects a single series when series setting is empty or A.\n\nResponse:\n' +
+	    JSON.stringify(this.series);
+      throw error;
+    }
+    if (this.series.length !== 2 && (bigValueIndex > 0 || sparklineIndex > 0)) {
+      var error: any = new Error();
+      error.message = 'Number of Serieses Error';
+      error.data = 'Metric query returns ' + this.series.length +
+	    ' series. Single Stat Panel expects two serieses when one of series settings is B.\n\nResponse:\n' +
+	    JSON.stringify(this.series);
       throw error;
     }
 
     if (this.series && this.series.length > 0) {
-      let lastPoint = _.last(this.series[0].datapoints);
-      let lastValue = _.isArray(lastPoint) ? lastPoint[0] : null;
+      let lastPoint = _.last(this.series[bigValueIndex].datapoints);
+      let lastValue = _.isArray(lastPoint) ? lastPoint[bigValueIndex] : null;
 
       if (this.panel.valueName === 'name') {
         data.value = 0;
@@ -309,8 +328,8 @@ class SingleStatCtrl extends MetricsPanelCtrl {
         data.valueRounded = data.value;
         data.valueFormatted = formatFunc(data.value, this.dashboard.isTimezoneUtc());
       } else {
-        data.value = this.series[0].stats[this.panel.valueName];
-        data.flotpairs = this.series[0].flotpairs;
+        data.value = this.series[bigValueIndex].stats[this.panel.valueName];
+        data.flotpairs = this.series[sparklineIndex].flotpairs;
 
         let decimalInfo = this.getDecimalsForValue(data.value);
         let formatFunc = kbn.valueFormats[this.panel.format];

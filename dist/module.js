@@ -75,6 +75,7 @@ System.register(["lodash", "jquery", "app/core/utils/kbn", "app/core/config", "a
                         format: 'none',
                         prefix: '',
                         postfix: '',
+                        seriesIndex: 'A',
                         nullText: null,
                         valueMaps: [{ value: 'null', op: '=', text: 'N/A' }],
                         mappingTypes: [{ name: 'value to text', value: 1 }, { name: 'range to text', value: 2 }],
@@ -94,6 +95,7 @@ System.register(["lodash", "jquery", "app/core/utils/kbn", "app/core/config", "a
                             full: false,
                             lineColor: 'rgb(31, 120, 193)',
                             fillColor: 'rgba(31, 118, 189, 0.18)',
+                            seriesIndex: 'A'
                         },
                         gauge: {
                             show: false,
@@ -270,19 +272,37 @@ System.register(["lodash", "jquery", "app/core/utils/kbn", "app/core/config", "a
                 };
                 SingleStatCtrl.prototype.setValues = function (data) {
                     data.flotpairs = [];
-                    if (this.series.length > 1) {
+                    var bigValueIndex = 0;
+                    var sparklineIndex = bigValueIndex;
+                    var CHAR_CODE_A = 65;
+                    if (this.panel.seriesIndex) {
+                        bigValueIndex = this.panel.seriesIndex.charCodeAt() - CHAR_CODE_A;
+                        sparklineIndex = bigValueIndex;
+                        if (this.panel.sparkline.seriesIndex) {
+                            sparklineIndex = this.panel.sparkline.seriesIndex.charCodeAt() - CHAR_CODE_A;
+                        }
+                    }
+                    if (this.series.length > 1 && bigValueIndex === 0 && sparklineIndex === 0) {
                         var error = new Error();
                         error.message = 'Multiple Series Error';
                         error.data =
                             'Metric query returns ' +
                                 this.series.length +
-                                ' series. Single Stat Panel expects a single series.\n\nResponse:\n' +
+                                ' series. Single Stat Panel expects a single series when series setting is empty or A.\n\nResponse:\n' +
                                 JSON.stringify(this.series);
                         throw error;
                     }
+                    if (this.series.length !== 2 && (bigValueIndex > 0 || sparklineIndex > 0)) {
+                        var error = new Error();
+                        error.message = 'Number of Serieses Error';
+                        error.data = 'Metric query returns ' + this.series.length +
+                            ' series. Single Stat Panel expects two serieses when one of series settings is B.\n\nResponse:\n' +
+                            JSON.stringify(this.series);
+                        throw error;
+                    }
                     if (this.series && this.series.length > 0) {
-                        var lastPoint = lodash_1.default.last(this.series[0].datapoints);
-                        var lastValue = lodash_1.default.isArray(lastPoint) ? lastPoint[0] : null;
+                        var lastPoint = lodash_1.default.last(this.series[bigValueIndex].datapoints);
+                        var lastValue = lodash_1.default.isArray(lastPoint) ? lastPoint[bigValueIndex] : null;
                         if (this.panel.valueName === 'name') {
                             data.value = 0;
                             data.valueRounded = 0;
@@ -300,8 +320,8 @@ System.register(["lodash", "jquery", "app/core/utils/kbn", "app/core/config", "a
                             data.valueFormatted = formatFunc(data.value, this.dashboard.isTimezoneUtc());
                         }
                         else {
-                            data.value = this.series[0].stats[this.panel.valueName];
-                            data.flotpairs = this.series[0].flotpairs;
+                            data.value = this.series[bigValueIndex].stats[this.panel.valueName];
+                            data.flotpairs = this.series[sparklineIndex].flotpairs;
                             var decimalInfo = this.getDecimalsForValue(data.value);
                             var formatFunc = kbn_1.default.valueFormats[this.panel.format];
                             data.valueFormatted = formatFunc(data.value, decimalInfo.decimals, decimalInfo.scaledDecimals);
