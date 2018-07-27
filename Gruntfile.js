@@ -44,7 +44,7 @@ module.exports = function(grunt) {
       dist_statics: {
         expand: true,
         flatten: true,
-        src: ['plugin.json', 'LICENSE', 'README.md'],
+        src: ['plugin.json', 'LICENSE.md', 'README.md'],
         dest: 'dist/'
       }
     },
