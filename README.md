@@ -10,4 +10,5 @@ Read more about it here:
 
 
 Copyright 2018 © Kenji Noguchi / Verizon Digital Media Services
+
 Copyright 2018 © Grafana Labs
